@@ -34,7 +34,7 @@ def testing(ctx):
     'steps': [
       {
         'name': 'generate',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make generate',
@@ -48,7 +48,7 @@ def testing(ctx):
       },
       {
         'name': 'vet',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make vet',
@@ -62,7 +62,7 @@ def testing(ctx):
       },
       {
         'name': 'staticcheck',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make staticcheck',
@@ -76,7 +76,7 @@ def testing(ctx):
       },
       {
         'name': 'lint',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make lint',
@@ -90,7 +90,7 @@ def testing(ctx):
       },
       {
         'name': 'build',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make build',
@@ -104,7 +104,7 @@ def testing(ctx):
       },
       {
         'name': 'test',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make test',
@@ -154,7 +154,7 @@ def docker(ctx, arch):
     'steps': [
       {
         'name': 'generate',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make generate',
@@ -168,7 +168,7 @@ def docker(ctx, arch):
       },
       {
         'name': 'build',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make build',
@@ -292,7 +292,7 @@ def binary(ctx, name):
     'steps': [
       {
         'name': 'generate',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make generate',
@@ -306,7 +306,7 @@ def binary(ctx, name):
       },
       {
         'name': 'build',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make release-%s' % (name),
@@ -320,7 +320,7 @@ def binary(ctx, name):
       },
       {
         'name': 'finish',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make release-finish',
@@ -475,7 +475,7 @@ def changelog(ctx):
       },
       {
         'name': 'generate',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'make changelog',
@@ -483,7 +483,7 @@ def changelog(ctx):
       },
       {
         'name': 'output',
-        'image': 'webhippie/golang:1.13',
+        'image': 'webhippie/golang:1.12',
         'pull': 'always',
         'commands': [
           'cat CHANGELOG.md',
