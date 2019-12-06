@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html id="html" lang="en-us">
+	<head>
+	<meta name="generator" content="Hugo 0.55.5" />
+		<meta http-equiv="content-type" content="text/html;charset=utf-8">
+		<meta name="viewport" content="width=device-width"/>
+
+		<title>
+			ownCloud Infinite Scale: Graph
+		</title>
+
+		<meta name="description" content="Serve Graph API for oCIS">
+		<meta name="author" content="ownCloud GmbH">
+
+		<link rel="stylesheet" href="syntax.css" />
+<link rel="stylesheet" href="styles.css" />
+
+	</head>
+
+	<body>
+		<section id="Menu">
+			<header>
+				<h1>
+					ownCloud Infinite Scale: Graph
+				</h1>
+
+				<p>
+					Serve Graph API for oCIS
+				</p>
+			</header>
+
+			<nav>
+				
+					<a href="#about">
+						About
+					</a>
+				
+					<a href="#getting-started">
+						Getting Started
+					</a>
+				
+					<a href="#building">
+						Building
+					</a>
+				
+					<a href="#license">
+						License
+					</a>
+				
+			</nav>
+		</section>
+
+		
+			<section id="about">
+				<h2>
+					<a href="#about">
+						About
+					</a>
+
+					<small>
+						<a href="#html">
+							Back to Top
+						</a>
+					</small>
+				</h2>
+
+				This service provides a simple graph world API which can be used by clients or other extensions.
+			</section>
+		
+			<section id="getting-started">
+				<h2>
+					<a href="#getting-started">
+						Getting Started
+					</a>
+
+					<small>
+						<a href="#html">
+							Back to Top
+						</a>
+					</small>
+				</h2>
+
+				<h3 id="installation">Installation</h3>
+
+<p>So far we are offering two different variants for the installation. You can choose between <a href="https://www.docker.com/">Docker</a> or pre-built binaries which are stored on our download mirrors and GitHub releases. Maybe we will also provide system packages for the major distributions later if we see the need for it.</p>
+
+<h4 id="docker">Docker</h4>
+
+<p>TBD</p>
+
+<h4 id="binaries">Binaries</h4>
+
+<p>TBD</p>
+
+<h3 id="configuration">Configuration</h3>
+
+<p>We provide overall three different variants of configuration. The variant based on environment variables and commandline flags are split up into global values and command-specific values.</p>
+
+<h4 id="envrionment-variables">Envrionment variables</h4>
+
+<p>If you prefer to configure the service with environment variables you can see the available variables below.</p>
+
+<h5 id="global">Global</h5>
+
+<dl>
+<dt>GRAPH_CONFIG_FILE<br /></dt>
+<dd>Path to config file, empty default value<br />
+<br /></dd>
+<dt>GRAPH_LOG_LEVEL<br /></dt>
+<dd>Set logging level, defaults to <code>info</code><br />
+<br /></dd>
+<dt>GRAPH_LOG_COLOR<br /></dt>
+<dd>Enable colored logging, defaults to <code>true</code><br />
+<br /></dd>
+<dt>GRAPH_LOG_PRETTY<br /></dt>
+<dd>Enable pretty logging, defaults to <code>true</code><br />
+<br /></dd>
+</dl>
+
+<h5 id="server">Server</h5>
+
+<dl>
+<dt>GRAPH_TRACING_ENABLED<br /></dt>
+<dd>Enable sending traces, defaults to <code>false</code><br />
+<br /></dd>
+<dt>GRAPH_TRACING_TYPE<br /></dt>
+<dd>Tracing backend type, defaults to <code>jaeger</code><br />
+<br /></dd>
+<dt>GRAPH_TRACING_ENDPOINT<br /></dt>
+<dd>Endpoint for the agent, empty default value<br />
+<br /></dd>
+<dt>GRAPH_TRACING_COLLECTOR<br /></dt>
+<dd>Endpoint for the collector, empty default value<br />
+<br /></dd>
+<dt>GRAPH_TRACING_SERVICE<br /></dt>
+<dd>Service name for tracing, defaults to <code>graph</code><br />
+<br /></dd>
+<dt>GRAPH_DEBUG_ADDR<br /></dt>
+<dd>Address to bind debug server, defaults to <code>0.0.0.0:9124</code><br />
+<br /></dd>
+<dt>GRAPH_DEBUG_TOKEN<br /></dt>
+<dd>Token to grant metrics access, empty default value<br />
+<br /></dd>
+<dt>GRAPH_DEBUG_PPROF<br /></dt>
+<dd>Enable pprof debugging, defaults to <code>false</code><br />
+<br /></dd>
+<dt>GRAPH_DEBUG_ZPAGES<br /></dt>
+<dd>Enable zpages debugging, defaults to <code>false</code><br />
+<br /></dd>
+<dt>GRAPH_HTTP_ADDR<br /></dt>
+<dd>Address to bind http server, defaults to <code>0.0.0.0:9120</code><br />
+<br /></dd>
+</dl>
+
+<h5 id="health">Health</h5>
+
+<dl>
+<dt>GRAPH_DEBUG_ADDR<br /></dt>
+<dd>Address to debug endpoint, defaults to <code>0.0.0.0:9124</code><br />
+<br /></dd>
+</dl>
+
+<h4 id="commandline-flags">Commandline flags</h4>
+
+<p>If you prefer to configure the service with commandline flags you can see the available variables below.</p>
+
+<h5 id="global-1">Global</h5>
+
+<dl>
+<dt>&ndash;config-file<br /></dt>
+<dd>Path to config file, empty default value<br />
+<br /></dd>
+<dt>&ndash;log-level<br /></dt>
+<dd>Set logging level, defaults to <code>info</code><br />
+<br /></dd>
+<dt>&ndash;log-color<br /></dt>
+<dd>Enable colored logging, defaults to <code>true</code><br />
+<br /></dd>
+<dt>&ndash;log-pretty<br /></dt>
+<dd>Enable pretty logging, defaults to <code>true</code><br />
+<br /></dd>
+</dl>
+
+<h5 id="server-1">Server</h5>
+
+<dl>
+<dt>&ndash;tracing-enabled<br /></dt>
+<dd>Enable sending traces, defaults to <code>false</code><br />
+<br /></dd>
+<dt>&ndash;tracing-type<br /></dt>
+<dd>Tracing backend type, defaults to <code>jaeger</code><br />
+<br /></dd>
+<dt>&ndash;tracing-endpoint<br /></dt>
+<dd>Endpoint for the agent, empty default value<br />
+<br /></dd>
+<dt>&ndash;tracing-collector<br /></dt>
+<dd>Endpoint for the collector, empty default value<br />
+<br /></dd>
+<dt>&ndash;tracing-service<br /></dt>
+<dd>Service name for tracing, defaults to <code>graph</code><br />
+<br /></dd>
+<dt>&ndash;debug-addr<br /></dt>
+<dd>Address to bind debug server, defaults to <code>0.0.0.0:9124</code><br />
+<br /></dd>
+<dt>&ndash;debug-token<br /></dt>
+<dd>Token to grant metrics access, empty default value<br />
+<br /></dd>
+<dt>&ndash;debug-pprof<br /></dt>
+<dd>Enable pprof debugging, defaults to <code>false</code><br />
+<br /></dd>
+<dt>&ndash;debug-zpages<br /></dt>
+<dd>Enable zpages debugging, defaults to <code>false</code><br />
+<br /></dd>
+<dt>&ndash;http-addr<br /></dt>
+<dd>Address to bind http server, defaults to <code>0.0.0.0:9120</code><br />
+<br /></dd>
+</dl>
+
+<h5 id="health-1">Health</h5>
+
+<dl>
+<dt>&ndash;debug-addr<br /></dt>
+<dd>Address to debug endpoint, defaults to <code>0.0.0.0:9124</code><br />
+<br /></dd>
+</dl>
+
+<h4 id="configuration-file">Configuration file</h4>
+
+<p>So far we support the file formats <code>JSON</code> and <code>YAML</code>, if you want to get a full example configuration just take a look at <a href="https://github.com/owncloud/ocis-graph/tree/master/config">our repository</a>, there you can always see the latest configuration format. These example configurations include all available options and the default values. The configuration file will be automatically loaded if it&rsquo;s placed at <code>/etc/ocis/graph.yml</code>, <code>${HOME}/.ocis/graph.yml</code> or <code>$(pwd)/config/graph.yml</code>.</p>
+
+<h3 id="usage">Usage</h3>
+
+<p>The program provides a few sub-commands on execution. The available configuration methods have already been mentioned above. Generally you can always see a formated help output if you execute the binary via <code>ocis-graph --help</code>.</p>
+
+<h4 id="server-2">Server</h4>
+
+<p>The server command is used to start the http and debug server on two addresses within a single process. The http server is serving the general webservice while the debug server is used for health check, readiness check and to server the metrics mentioned below. For further help please execute:</p>
+
+<div class="highlight"><pre class="chroma"><code class="language-txt" data-lang="txt">ocis-graph server --help</code></pre></div>
+
+<h4 id="health-2">Health</h4>
+
+<p>The health command is used to execute a health check, if the exit code equals zero the service should be up and running, if the exist code is greater than zero the service is not in a healthy state. Generally this command is used within our Docker containers, it could also be used within Kubernetes.</p>
+
+<div class="highlight"><pre class="chroma"><code class="language-txt" data-lang="txt">ocis-graph health --help</code></pre></div>
+
+<h3 id="metrics">Metrics</h3>
+
+<p>This service provides some <a href="https://prometheus.io/">Prometheus</a> metrics through the debug endpoint, you can optionally secure the metrics endpoint by some random token, which got to be configured through one of the flag <code>--debug-token</code> or the environment variable <code>GRAPH_DEBUG_TOKEN</code> mentioned above. By default the metrics endpoint is bound to <code>http://0.0.0.0:9124/metrics</code>.</p>
+
+<dl>
+<dt>go_gc_duration_seconds<br /></dt>
+<dd>A summary of the GC invocation durations<br />
+<br /></dd>
+<dt>go_gc_duration_seconds_sum<br /></dt>
+<dd>A summary of the GC invocation durations<br />
+<br /></dd>
+<dt>go_gc_duration_seconds_count<br /></dt>
+<dd>A summary of the GC invocation durations<br />
+<br /></dd>
+<dt>go_goroutines<br /></dt>
+<dd>Number of goroutines that currently exist<br />
+<br /></dd>
+<dt>go_info<br /></dt>
+<dd>Information about the Go environment<br />
+<br /></dd>
+<dt>go_memstats_alloc_bytes<br /></dt>
+<dd>Number of bytes allocated and still in use<br />
+<br /></dd>
+<dt>go_memstats_alloc_bytes_total<br /></dt>
+<dd>Total number of bytes allocated, even if freed<br />
+<br /></dd>
+<dt>go_memstats_buck_hash_sys_bytes<br /></dt>
+<dd>Number of bytes used by the profiling bucket hash table<br />
+<br /></dd>
+<dt>go_memstats_frees_total<br /></dt>
+<dd>Total number of frees<br />
+<br /></dd>
+<dt>go_memstats_gc_cpu_fraction<br /></dt>
+<dd>The fraction of this program&rsquo;s available CPU time used by the GC since the program started<br />
+<br /></dd>
+<dt>go_memstats_gc_sys_bytes<br /></dt>
+<dd>Number of bytes used for garbage collection system metadata<br />
+<br /></dd>
+<dt>go_memstats_heap_alloc_bytes<br /></dt>
+<dd>Number of heap bytes allocated and still in use<br />
+<br /></dd>
+<dt>go_memstats_heap_idle_bytes<br /></dt>
+<dd>Number of heap bytes waiting to be used<br />
+<br /></dd>
+<dt>go_memstats_heap_inuse_bytes<br /></dt>
+<dd>Number of heap bytes that are in use<br />
+<br /></dd>
+<dt>go_memstats_heap_objects<br /></dt>
+<dd>Number of allocated objects<br />
+<br /></dd>
+<dt>go_memstats_heap_released_bytes<br /></dt>
+<dd>Number of heap bytes released to OS<br />
+<br /></dd>
+<dt>go_memstats_heap_sys_bytes<br /></dt>
+<dd>Number of heap bytes obtained from system<br />
+<br /></dd>
+<dt>go_memstats_last_gc_time_seconds<br /></dt>
+<dd>Number of seconds since 1970 of last garbage collection<br />
+<br /></dd>
+<dt>go_memstats_lookups_total<br /></dt>
+<dd>Total number of pointer lookups<br />
+<br /></dd>
+<dt>go_memstats_mallocs_total<br /></dt>
+<dd>Total number of mallocs<br />
+<br /></dd>
+<dt>go_memstats_mcache_inuse_bytes<br /></dt>
+<dd>Number of bytes in use by mcache structures<br />
+<br /></dd>
+<dt>go_memstats_mcache_sys_bytes<br /></dt>
+<dd>Number of bytes used for mcache structures obtained from system<br />
+<br /></dd>
+<dt>go_memstats_mspan_inuse_bytes<br /></dt>
+<dd>Number of bytes in use by mspan structures<br />
+<br /></dd>
+<dt>go_memstats_mspan_sys_bytes<br /></dt>
+<dd>Number of bytes used for mspan structures obtained from system<br />
+<br /></dd>
+<dt>go_memstats_next_gc_bytes<br /></dt>
+<dd>Number of heap bytes when next garbage collection will take place<br />
+<br /></dd>
+<dt>go_memstats_other_sys_bytes<br /></dt>
+<dd>Number of bytes used for other system allocations<br />
+<br /></dd>
+<dt>go_memstats_stack_inuse_bytes<br /></dt>
+<dd>Number of bytes in use by the stack allocator<br />
+<br /></dd>
+<dt>go_memstats_stack_sys_bytes<br /></dt>
+<dd>Number of bytes obtained from system for stack allocator<br />
+<br /></dd>
+<dt>go_memstats_sys_bytes<br /></dt>
+<dd>Number of bytes obtained from system<br />
+<br /></dd>
+<dt>go_threads<br /></dt>
+<dd>Number of OS threads created<br />
+<br /></dd>
+<dt>promhttp_metric_handler_requests_in_flight<br /></dt>
+<dd>Current number of scrapes being served<br />
+<br /></dd>
+<dt>promhttp_metric_handler_requests_total<br /></dt>
+<dd>Total number of scrapes by HTTP status code<br /></dd>
+</dl>
+
+			</section>
+		
+			<section id="building">
+				<h2>
+					<a href="#building">
+						Building
+					</a>
+
+					<small>
+						<a href="#html">
+							Back to Top
+						</a>
+					</small>
+				</h2>
+
+				<p>As this project is built with Go, so you need to install that first. The installation of Go is out of the scope of this document, please follow the official documentation for <a href="https://golang.org/doc/install">Go</a>, to build this project you have to install Go &gt;= v1.12. After the installation of the required tools you need to get the sources:</p>
+
+<div class="highlight"><pre class="chroma"><code class="language-txt" data-lang="txt">git clone https://github.com/owncloud/ocis-graph.git
+cd ocis-graph</code></pre></div>
+
+<p>All required tool besides Go itself and make are bundled or getting automatically installed within the <code>GOPATH</code>. All commands to build this project are part of our <code>Makefile</code>.</p>
+
+<h3 id="backend">Backend</h3>
+
+<div class="highlight"><pre class="chroma"><code class="language-txt" data-lang="txt">make generate
+make build</code></pre></div>
+
+<p>Finally you should have the binary within the <code>bin/</code> folder now, give it a try with <code>./bin/ocis-graph -h</code> to see all available options.</p>
+
+			</section>
+		
+			<section id="license">
+				<h2>
+					<a href="#license">
+						License
+					</a>
+
+					<small>
+						<a href="#html">
+							Back to Top
+						</a>
+					</small>
+				</h2>
+
+				This project is licensed under the <a href="https://github.com/owncloud/ocis-graph/blob/master/LICENSE">Apache 2.0</a> license. For the license of the used libraries you have to check the respective sources.
+			</section>
+		
+	</body>
+</html>
