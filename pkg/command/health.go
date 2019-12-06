@@ -5,9 +5,8 @@ import (
 	"net/http"
 
 	"github.com/micro/cli"
-	"github.com/micro/go-micro/util/log"
-	"github.com/owncloud/ocis-graph/pkg/config"
-	"github.com/owncloud/ocis-graph/pkg/flagset"
+	"github.com/owncloud/ocis-hello/pkg/config"
+	"github.com/owncloud/ocis-hello/pkg/flagset"
 )
 
 // Health is the entrypoint for the health command.
@@ -17,6 +16,8 @@ func Health(cfg *config.Config) cli.Command {
 		Usage: "Check health status",
 		Flags: flagset.HealthWithConfig(cfg),
 		Action: func(c *cli.Context) error {
+			logger := NewLogger(cfg)
+
 			resp, err := http.Get(
 				fmt.Sprintf(
 					"http://%s/healthz",
@@ -25,16 +26,22 @@ func Health(cfg *config.Config) cli.Command {
 			)
 
 			if err != nil {
-				log.Fatalf("Failed to request health check: %w", err)
+				logger.Fatal().
+					Err(err).
+					Msg("Failed to request health check")
 			}
 
 			defer resp.Body.Close()
 
 			if resp.StatusCode != 200 {
-				log.Fatalf("Health check responds with [%d]", resp.StatusCode)
+				logger.Fatal().
+					Int("code", resp.StatusCode).
+					Msg("Health seems to be in bad state")
 			}
 
-			log.Debugf("Health got good state with [%d]", resp.StatusCode)
+			logger.Debug().
+				Int("code", resp.StatusCode).
+				Msg("Health got a good state")
 
 			return nil
 		},

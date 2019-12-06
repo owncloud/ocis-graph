@@ -5,19 +5,19 @@ import (
 	"strings"
 
 	"github.com/micro/cli"
-	"github.com/micro/go-micro/util/log"
-	"github.com/owncloud/ocis-graph/pkg/config"
-	"github.com/owncloud/ocis-graph/pkg/flagset"
-	"github.com/owncloud/ocis-graph/pkg/version"
+	"github.com/owncloud/ocis-hello/pkg/config"
+	"github.com/owncloud/ocis-hello/pkg/flagset"
+	"github.com/owncloud/ocis-hello/pkg/version"
+	"github.com/owncloud/ocis-pkg/log"
 	"github.com/spf13/viper"
 )
 
-// Execute is the entry point for the ocis-graph command.
+// Execute is the entry point for the ocis-hello command.
 func Execute() error {
 	cfg := config.New()
 
 	app := &cli.App{
-		Name:     "ocis-graph",
+		Name:     "ocis-hello",
 		Version:  version.String,
 		Usage:    "Example service for Reva/oCIS",
 		Compiled: version.Compiled(),
@@ -32,16 +32,16 @@ func Execute() error {
 		Flags: flagset.RootWithConfig(cfg),
 
 		Before: func(c *cli.Context) error {
-			NewLogger(cfg)
+			logger := NewLogger(cfg)
 
 			viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-			viper.SetEnvPrefix("graph")
+			viper.SetEnvPrefix("HELLO")
 			viper.AutomaticEnv()
 
 			if c.IsSet("config-file") {
 				viper.SetConfigFile(c.String("config-file"))
 			} else {
-				viper.SetConfigName("graph")
+				viper.SetConfigName("hello")
 
 				viper.AddConfigPath("/etc/ocis")
 				viper.AddConfigPath("$HOME/.ocis")
@@ -51,16 +51,23 @@ func Execute() error {
 			if err := viper.ReadInConfig(); err != nil {
 				switch err.(type) {
 				case viper.ConfigFileNotFoundError:
-					log.Info("Continue without config")
+					logger.Info().
+						Msg("Continue without config")
 				case viper.UnsupportedConfigError:
-					log.Fatalf("Unsupported config type: %w", err)
+					logger.Fatal().
+						Err(err).
+						Msg("Unsupported config type")
 				default:
-					log.Fatalf("Failed to read config: %w", err)
+					logger.Fatal().
+						Err(err).
+						Msg("Failed to read config")
 				}
 			}
 
 			if err := viper.Unmarshal(&cfg); err != nil {
-				log.Fatalf("Failed to parse config: %w", err)
+				logger.Fatal().
+					Err(err).
+					Msg("Failed to parse config")
 			}
 
 			return nil
@@ -85,23 +92,12 @@ func Execute() error {
 	return app.Run(os.Args)
 }
 
-func NewLogger(cfg *config.Config) {
-	switch strings.ToLower(cfg.Log.Level) {
-	case "fatal":
-		log.SetLevel(log.LevelFatal)
-	case "error":
-		log.SetLevel(log.LevelError)
-	case "info":
-		log.SetLevel(log.LevelInfo)
-	case "warn":
-		log.SetLevel(log.LevelWarn)
-	case "debug":
-		log.SetLevel(log.LevelDebug)
-	case "trace":
-		log.SetLevel(log.LevelTrace)
-	default:
-		log.SetLevel(log.LevelInfo)
-	}
-
-	log.Name("graph")
+// NewLogger initializes a service-specific logger instance.
+func NewLogger(cfg *config.Config) log.Logger {
+	return log.NewLogger(
+		log.Name("hello"),
+		log.Level(cfg.Log.Level),
+		log.Pretty(cfg.Log.Pretty),
+		log.Color(cfg.Log.Color),
+	)
 }
