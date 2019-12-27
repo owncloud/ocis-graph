@@ -132,7 +132,7 @@ func ServerWithConfig(cfg *config.Config) []cli.Flag {
 			Value:       "com.owncloud.web",
 			Usage:       "Set the base namespace for the http service for service discovery",
 			EnvVar:      "GRAPH_HTTP_NAMESPACE",
-			Destination: &cfg.HTTP.Root,
+			Destination: &cfg.HTTP.Namespace,
 		},
 		&cli.StringFlag{
 			Name:        "ldap-network",
