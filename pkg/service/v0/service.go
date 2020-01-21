@@ -27,9 +27,14 @@ func NewService(opts ...Option) Service {
 		logger: &options.Logger,
 	}
 
+	svc.logger.Info().Msg("Starting graph ....")
+
 	m.Route(options.Config.HTTP.Root, func(r chi.Router) {
 		r.Route("/v1.0", func(r chi.Router) {
-			r.Get("/me", svc.GetMe)
+			r.Route("/me", func(r chi.Router) {
+				r.Get("/", svc.GetMe)
+				r.Get("/drive/root/children", svc.GetRootDriveChildren)
+			})
 			r.Route("/users", func(r chi.Router) {
 				r.Get("/", svc.GetUsers)
 				r.Route("/{userID}", func(r chi.Router) {
