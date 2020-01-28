@@ -2,6 +2,7 @@ package svc
 
 import (
 	"github.com/go-chi/render"
+	"google.golang.org/grpc/metadata"
 	"net/http"
 	"strings"
 
@@ -9,10 +10,7 @@ import (
 	storageprovider "github.com/cs3org/go-cs3apis/cs3/storage/provider/v1beta1"
 	"github.com/cs3org/reva/pkg/token"
 	msgraph "github.com/yaegashi/msgraph.go/v1.0"
-	"google.golang.org/grpc/metadata"
 )
-
-const defaultHeader = "x-access-token"
 
 func getToken(r *http.Request) string {
 	// 1. check Authorization header
@@ -36,16 +34,21 @@ func getToken(r *http.Request) string {
 func (g Graph) GetRootDriveChildren(w http.ResponseWriter, r *http.Request) {
 	g.logger.Info().Msgf("Calling GetRootDriveChildren")
 	accessToken := getToken(r)
+	if accessToken == "" {
+		g.logger.Error().Msg("no access token provided in request")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
 	ctx := r.Context()
 	ctx = token.ContextSetToken(ctx, accessToken)
-	ctx = metadata.AppendToOutgoingContext(ctx, defaultHeader, accessToken)
-	g.logger.Info().Msgf("provides access token %s", ctx)
+	ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, accessToken)
+
+	g.logger.Info().Msgf("provides access token %v", ctx)
 
 	// TODO: read the path from request
 	fn := "/"
 	listChildren := true
 
-	// TODO: where to get the client from
 	client, err := g.GetClient()
 	if err != nil {
 		g.logger.Err(err).Msg("error getting grpc client")

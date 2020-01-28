@@ -26,5 +26,5 @@ func getGatewayServiceClient(endpoint string) (gateway.GatewayAPIClient, error) 
 
 // GetClient returns a gateway client to talk to reva
 func (g Graph) GetClient() (gateway.GatewayAPIClient, error) {
-	return getGatewayServiceClient("ocis:9999")
+	return getGatewayServiceClient(g.config.Reva.Address)
 }
