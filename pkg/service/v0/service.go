@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 // Service defines the extension handlers.
@@ -30,6 +31,7 @@ func NewService(opts ...Option) Service {
 	svc.logger.Info().Msg("Starting graph ....")
 
 	m.Route(options.Config.HTTP.Root, func(r chi.Router) {
+		r.Use(middleware.StripSlashes)
 		r.Route("/v1.0", func(r chi.Router) {
 			r.Route("/me", func(r chi.Router) {
 				r.Get("/", svc.GetMe)
