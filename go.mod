@@ -7,8 +7,8 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.6.0
 	contrib.go.opencensus.io/exporter/zipkin v0.1.1
 	github.com/cespare/reflex v0.2.0 // indirect
-	github.com/cs3org/go-cs3apis v0.0.0-20200115100126-824a5f718250
-	github.com/cs3org/reva v0.0.2-0.20200117060420-e6c824652a46
+	github.com/cs3org/go-cs3apis v0.0.0-20191128165347-19746c015c83
+	github.com/cs3org/reva v0.0.2-0.20200115110931-4c7513415ec5
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/haya14busa/goverage v0.0.0-20180129164344-eec3514a20b5 // indirect

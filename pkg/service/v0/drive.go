@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	gateway "github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
 	cs3rpc "github.com/cs3org/go-cs3apis/cs3/rpc/v1beta1"
 	storageprovider "github.com/cs3org/go-cs3apis/cs3/storage/provider/v1beta1"
 	"github.com/cs3org/reva/pkg/token"
@@ -40,14 +41,8 @@ func (g Graph) GetRootDriveChildren(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	ctx = token.ContextSetToken(ctx, accessToken)
-	ctx = metadata.AppendToOutgoingContext(ctx, token.TokenHeader, accessToken)
 
-	g.logger.Info().Msgf("provides access token %v", ctx)
-
-	// TODO: read the path from request
-	fn := "/"
-	listChildren := true
+	fn := "/home"
 
 	client, err := g.GetClient()
 	if err != nil {
@@ -56,48 +51,38 @@ func (g Graph) GetRootDriveChildren(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get reva token
+	authReq := &gateway.AuthenticateRequest{
+		Type:         "bearer",
+		ClientSecret: accessToken,
+	}
+
+	authRes, _ := client.Authenticate(ctx, authReq);
+	ctx = token.ContextSetToken(ctx, authRes.Token)
+	ctx = metadata.AppendToOutgoingContext(ctx, "x-access-token", authRes.Token)
+
+	g.logger.Info().Msgf("provides access token %v", ctx)
+
 	ref := &storageprovider.Reference{
 		Spec: &storageprovider.Reference_Path{Path: fn},
 	}
-	req := &storageprovider.StatRequest{Ref: ref}
-	res, err := client.Stat(ctx, req)
+
+	req := &storageprovider.ListContainerRequest{
+		Ref: ref,
+	}
+	res, err := client.ListContainer(ctx, req)
 	if err != nil {
-		g.logger.Error().Err(err).Msg("error sending a grpc stat request")
+		g.logger.Error().Err(err).Msgf("error sending list container grpc request %s", fn)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	if res.Status.Code != cs3rpc.Code_CODE_OK {
-		if res.Status.Code == cs3rpc.Code_CODE_NOT_FOUND {
-			g.logger.Error().Err(err).Msgf("resource not found %s", fn)
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
+		g.logger.Error().Err(err).Msgf("error calling grpc list container %s", fn)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	info := res.Info
-	infos := []*storageprovider.ResourceInfo{info}
-	if info.Type == storageprovider.ResourceType_RESOURCE_TYPE_CONTAINER && listChildren {
-		req := &storageprovider.ListContainerRequest{
-			Ref: ref,
-		}
-		res, err := client.ListContainer(ctx, req)
-		if err != nil {
-			g.logger.Error().Err(err).Msgf("error sending list container grpc request %s", fn)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		if res.Status.Code != cs3rpc.Code_CODE_OK {
-			g.logger.Error().Err(err).Msgf("error calling grpc list container %s", fn)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		infos = append(infos, res.Infos...)
-	}
-
-	files, err := formatDriveItems(infos)
+	files, err := formatDriveItems(res.Infos)
 	if err != nil {
 		g.logger.Error().Err(err).Msgf("error encoding response as json %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -123,10 +108,11 @@ func cs3ResourceToDriveItem(res *storageprovider.ResourceInfo) (*msgraph.DriveIt
 	*/
 	size := new(int)
 	*size = int(res.Size) // uint64 -> int :boom:
+	name := strings.TrimPrefix(res.Path, "/home")
 
 	driveItem := &msgraph.DriveItem{
 		BaseItem: msgraph.BaseItem{
-			Name: &res.Path,
+			Name: &name,
 		},
 		Size: size,
 	}
