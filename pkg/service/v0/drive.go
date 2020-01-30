@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"net/http"
 	"strings"
+	"time"
 
 	gateway "github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
 	cs3rpc "github.com/cs3org/go-cs3apis/cs3/rpc/v1beta1"
@@ -95,26 +96,32 @@ func (g Graph) GetRootDriveChildren(w http.ResponseWriter, r *http.Request) {
 
 
 func cs3ResourceToDriveItem(res *storageprovider.ResourceInfo) (*msgraph.DriveItem, error) {
-	/*
-		{
-			"value": [
-			  {"name": "myfile.jpg", "size": 2048, "file": {} },
-			  {"name": "Documents", "folder": { "childCount": 4} },
-			  {"name": "Photos", "folder": { "childCount": 203} },
-			  {"name": "my sheet(1).xlsx", "size": 197 }
-			],
-			"@odata.nextLink": "https://..."
-		  }
-	*/
 	size := new(int)
 	*size = int(res.Size) // uint64 -> int :boom:
-	name := strings.TrimPrefix(res.Path, "/home")
+	name := strings.TrimPrefix(res.Path, "/home/")
+	lastModified := new(time.Time)
+	*lastModified = time.Unix(int64(res.Mtime.Seconds), int64(res.Mtime.Nanos))
 
 	driveItem := &msgraph.DriveItem{
 		BaseItem: msgraph.BaseItem{
+			Entity: msgraph.Entity{
+				Object: msgraph.Object{},
+				ID:     &res.Id.OpaqueId,
+			},
 			Name: &name,
+			LastModifiedDateTime: lastModified,
+			ETag: &res.Etag,
 		},
 		Size: size,
+	}
+	if res.Type == storageprovider.ResourceType_RESOURCE_TYPE_FILE {
+		driveItem.File = &msgraph.File{
+			MimeType: &res.MimeType,
+		}
+	}
+	if res.Type == storageprovider.ResourceType_RESOURCE_TYPE_CONTAINER {
+		driveItem.Folder = &msgraph.Folder{
+		}
 	}
 	return driveItem, nil
 }
