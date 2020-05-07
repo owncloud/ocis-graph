@@ -3,6 +3,7 @@ package svc
 import (
 	"net/http"
 
+	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
 	"github.com/owncloud/ocis-graph/pkg/config"
 	"github.com/owncloud/ocis-pkg/v2/log"
 )
@@ -12,9 +13,10 @@ type Option func(o *Options)
 
 // Options defines the available options for this package.
 type Options struct {
-	Logger     log.Logger
-	Config     *config.Config
-	Middleware []func(http.Handler) http.Handler
+	Logger          log.Logger
+	Config          *config.Config
+	Middleware      []func(http.Handler) http.Handler
+	AccountsService accounts.AccountsService
 }
 
 // newOptions initializes the available default options.
@@ -46,5 +48,12 @@ func Config(val *config.Config) Option {
 func Middleware(val ...func(http.Handler) http.Handler) Option {
 	return func(o *Options) {
 		o.Middleware = val
+	}
+}
+
+// AccountsService provides an AccountsService client to set the AccountsService option.
+func AccountsService(val accounts.AccountsService) Option {
+	return func(o *Options) {
+		o.AccountsService = val
 	}
 }

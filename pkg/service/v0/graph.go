@@ -5,9 +5,11 @@ import (
 
 	gateway "github.com/cs3org/go-cs3apis/cs3/gateway/v1beta1"
 	"github.com/go-chi/chi"
+	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
 	"github.com/owncloud/ocis-graph/pkg/config"
 	"github.com/owncloud/ocis-graph/pkg/cs3"
 	"github.com/owncloud/ocis-pkg/v2/log"
+	msgraph "github.com/yaegashi/msgraph.go/v1.0"
 )
 
 // Graph defines implements the business logic for Service.
@@ -15,6 +17,7 @@ type Graph struct {
 	config *config.Config
 	mux    *chi.Mux
 	logger *log.Logger
+	as     accounts.AccountsService
 }
 
 // ServeHTTP implements the Service interface.
@@ -32,8 +35,24 @@ func (g Graph) GetClient() (gateway.GatewayAPIClient, error) {
 type key int
 
 const userIDKey key = 0
-const groupIDKey key = 1
 
 type listResponse struct {
 	Value interface{} `json:"value,omitempty"`
+}
+
+func createUserModelFromRecord(record *accounts.Record) *msgraph.User {
+	u := &msgraph.User{
+		DirectoryObject: msgraph.DirectoryObject{
+			Entity: msgraph.Entity{
+				ID: &record.Key,
+			},
+		},
+	}
+	if record.Payload != nil && record.Payload.Account != nil && record.Payload.Account.StandardClaims != nil {
+		u.DisplayName = &record.Payload.Account.StandardClaims.Name
+		u.GivenName = &record.Payload.Account.StandardClaims.GivenName
+		u.Mail = &record.Payload.Account.StandardClaims.Email
+		u.Surname = &record.Payload.Account.StandardClaims.FamilyName
+	}
+	return u
 }
