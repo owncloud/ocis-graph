@@ -30,12 +30,6 @@ func (g Graph) GetClient() (gateway.GatewayAPIClient, error) {
 	return cs3.GetGatewayServiceClient(g.config.Reva.Address)
 }
 
-// The key type is unexported to prevent collisions with context keys defined in
-// other packages.
-type key int
-
-const userIDKey key = 0
-
 type listResponse struct {
 	Value interface{} `json:"value,omitempty"`
 }

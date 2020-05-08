@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
+	authmw "github.com/owncloud/ocis-graph/pkg/middleware"
 	"github.com/owncloud/ocis-graph/pkg/service/v0/errorcode"
 
 	"github.com/go-chi/chi"
@@ -35,17 +36,25 @@ func (g Graph) UserCtx(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, record)
+		// store record in context so handlers can access it
+		ctx := context.WithValue(r.Context(), authmw.CtxUserRecordKey, record)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// GetMe implements the Service interface.
-func (g Graph) GetMe(w http.ResponseWriter, r *http.Request) {
-	claims := oidc.FromContext(r.Context())
+func (g Graph) getUserRecord(ctx context.Context) (record *accounts.Record, err error) {
+	// check if record is already available
+	record = ctx.Value(authmw.CtxUserRecordKey).(*accounts.Record)
+	if record != nil {
+		return
+	}
+
+	// check oidc claims
+	claims := oidc.FromContext(ctx)
 	g.logger.Info().Interface("Claims", claims).Msg("Claims in /me")
 
-	record, err := g.as.Get(r.Context(), &accounts.GetRequest{
+	// lookup using sub&iss
+	record, err = g.as.Get(ctx, &accounts.GetRequest{
 		Identity: &accounts.IdHistory{
 			Iss: claims.Iss,
 			Sub: claims.Sub,
@@ -53,6 +62,17 @@ func (g Graph) GetMe(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		g.logger.Info().Err(err).Str("iss", claims.Iss).Str("sub", claims.Sub).Msg("Failed to read user")
+	}
+
+	// TODO fallback to lookup using email or username
+	return
+}
+
+// GetMe implements the Service interface.
+func (g Graph) GetMe(w http.ResponseWriter, r *http.Request) {
+
+	record, err := g.getUserRecord(r.Context())
+	if err != nil {
 		errorcode.ItemNotFound.Render(w, r, http.StatusNotFound)
 		return
 	}
@@ -87,7 +107,7 @@ func (g Graph) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // GetUser implements the Service interface.
 func (g Graph) GetUser(w http.ResponseWriter, r *http.Request) {
-	record := r.Context().Value(userIDKey).(*accounts.Record)
+	record := r.Context().Value(authmw.CtxUserRecordKey).(*accounts.Record)
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, createUserModelFromRecord(record))

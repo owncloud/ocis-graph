@@ -4,6 +4,7 @@ import (
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
 	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
+	authmw "github.com/owncloud/ocis-graph/pkg/middleware"
 	svc "github.com/owncloud/ocis-graph/pkg/service/v0"
 	"github.com/owncloud/ocis-graph/pkg/version"
 	"github.com/owncloud/ocis-pkg/v2/middleware"
@@ -47,12 +48,19 @@ func Server(opts ...Option) (http.Service, error) {
 			middleware.Logger(
 				options.Logger,
 			),
-			// TODO wrap with basic auth middleware for ldap bind like requests
-			middleware.OpenIDConnect(
-				oidc.Endpoint(options.Config.OpenIDConnect.Endpoint),
-				oidc.Realm(options.Config.OpenIDConnect.Realm),
-				oidc.Insecure(options.Config.OpenIDConnect.Insecure),
-				oidc.Logger(options.Logger),
+			authmw.BasicAuth(
+				authmw.AuthMiddleware( // wrap with basic auth middleware for ldap bind like requests
+					middleware.OpenIDConnect(
+						oidc.Endpoint(options.Config.OpenIDConnect.Endpoint),
+						oidc.Realm(options.Config.OpenIDConnect.Realm),
+						oidc.Insecure(options.Config.OpenIDConnect.Insecure),
+						oidc.Logger(options.Logger),
+					),
+				),
+				authmw.AccountsService(as),
+				authmw.Logger(
+					options.Logger,
+				),
 			),
 		),
 	)
