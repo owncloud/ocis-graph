@@ -93,5 +93,5 @@ func getAccountsService() (accounts.AccountsService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return accounts.NewAccountsService("com.owncloud.accounts", service.Client()), nil
+	return accounts.NewAccountsService("com.owncloud.api.accounts", service.Client()), nil
 }

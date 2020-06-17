@@ -34,19 +34,32 @@ type listResponse struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
-func createUserModelFromRecord(record *accounts.Record) *msgraph.User {
+func createUserModelFromAccount(a *accounts.Account) *msgraph.User {
 	u := &msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
 			Entity: msgraph.Entity{
-				ID: &record.Key,
+				ID: &a.Id,
 			},
 		},
-	}
-	if record.Payload != nil && record.Payload.Account != nil && record.Payload.Account.StandardClaims != nil {
-		u.DisplayName = &record.Payload.Account.StandardClaims.Name
-		u.GivenName = &record.Payload.Account.StandardClaims.GivenName
-		u.Mail = &record.Payload.Account.StandardClaims.Email
-		u.Surname = &record.Payload.Account.StandardClaims.FamilyName
+		DisplayName:   &a.DisplayName,
+		Mail:          &a.Mail,
+		PreferredName: &a.PreferredName,
+		// TODO expos uid & gid via extension
+		/*
+			Extensions: []msgraph.Extension{
+				{
+					Entity: msgraph.Entity{
+						//ID: ,
+						Object: msgraph.Object{
+							AdditionalData: map[string]interface{}{
+								"uidNumber": &a.UidNumber,
+								"gidNumber": &a.GidNumber,
+							},
+						},
+					},
+				},
+			},
+		*/
 	}
 	return u
 }

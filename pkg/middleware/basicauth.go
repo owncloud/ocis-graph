@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
@@ -10,8 +11,8 @@ import (
 
 type key int
 
-// CtxUserRecordKey is used to store the record of the authenticated user
-const CtxUserRecordKey key = iota
+// CtxUserAccountKey is used to store the record of the authenticated user
+const CtxUserAccountKey key = iota
 
 // BasicAuth provides a middleware to check access secured using basic auth
 func BasicAuth(opts ...Option) func(http.Handler) http.Handler {
@@ -19,9 +20,12 @@ func BasicAuth(opts ...Option) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if username, password, ok := r.BasicAuth(); ok {
-				record, err := options.AccountsService.Get(r.Context(), &accounts.GetRequest{
-					Username: username,
-					Password: password,
+				a, err := options.AccountsService.ListAccounts(r.Context(), &accounts.ListAccountsRequest{
+					//Query: fmt.Sprintf("username eq '%s'", username),
+					// TODO this allows lookung up users when you know the username using basic auth
+					// adding the password to the query is an option but sending the sover the wira a la scim seems ugly
+					// but to set passwords our accounts need it anyway
+					Query: fmt.Sprintf("login eq '%s' and password eq '%s'", username, password),
 				})
 				if err != nil {
 					options.Logger.Info().Err(err).Str("username", username).Msg("Failed to read user")
@@ -31,7 +35,7 @@ func BasicAuth(opts ...Option) func(http.Handler) http.Handler {
 					return
 				}
 
-				ctx := context.WithValue(r.Context(), CtxUserRecordKey, record)
+				ctx := context.WithValue(r.Context(), CtxUserAccountKey, a)
 				next.ServeHTTP(w, r.WithContext(ctx))
 			} else {
 				options.AuthMiddleware(next).ServeHTTP(w, r)

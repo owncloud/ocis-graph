@@ -2,7 +2,10 @@ package svc
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
 	authmw "github.com/owncloud/ocis-graph/pkg/middleware"
@@ -27,57 +30,69 @@ func (g Graph) UserCtx(next http.Handler) http.Handler {
 			return
 		}
 
-		record, err := g.as.Get(r.Context(), &accounts.GetRequest{
-			Uuid: userID,
+		a, err := g.as.GetAccount(r.Context(), &accounts.GetAccountRequest{
+			Id: userID,
 		})
 		if err != nil {
-			g.logger.Info().Err(err).Str("uuid", userID).Msg("Failed to read user")
+			// TODO differentiate betwen not found and too many users error
+			g.logger.Info().Err(err).Str("userID", userID).Msg("Failed to read user")
 			errorcode.ItemNotFound.Render(w, r, http.StatusNotFound)
 			return
 		}
 
-		// store record in context so handlers can access it
-		ctx := context.WithValue(r.Context(), authmw.CtxUserRecordKey, record)
+		// store account in context so handlers can access it
+		ctx := context.WithValue(r.Context(), authmw.CtxUserAccountKey, a)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (g Graph) getUserRecord(ctx context.Context) (record *accounts.Record, err error) {
-	// check if record is already available
-	record = ctx.Value(authmw.CtxUserRecordKey).(*accounts.Record)
-	if record != nil {
+func (g Graph) getUserAccount(ctx context.Context) (a *accounts.Account, err error) {
+	// check if account is already available
+	a = ctx.Value(authmw.CtxUserAccountKey).(*accounts.Account)
+	if a != nil {
 		return
 	}
 
-	// check oidc claims
+	// get oidc claims
 	claims := oidc.FromContext(ctx)
-	g.logger.Info().Interface("Claims", claims).Msg("Claims in /me")
+	g.logger.Debug().Interface("Claims", claims).Msg("Claims in /me")
 
-	// lookup using sub&iss
-	record, err = g.as.Get(ctx, &accounts.GetRequest{
-		Identity: &accounts.IdHistory{
-			Iss: claims.Iss,
-			Sub: claims.Sub,
-		},
-	})
+	// TODO read query from config. use string replace for {mail}, {iss}, {sub} or whatever claims
+	query := "mail eq '{mail}'"
+	query = strings.ReplaceAll(query, "{mail}", claims.Email)
+
+	// lookup using claims
+	var lar *accounts.ListAccountsResponse
+	lar, err = g.as.ListAccounts(ctx, &accounts.ListAccountsRequest{Query: query, PageSize: 2})
 	if err != nil {
-		g.logger.Info().Err(err).Str("iss", claims.Iss).Str("sub", claims.Sub).Msg("Failed to read user")
+		g.logger.Error().Err(err).Str("iss", claims.Iss).Str("sub", claims.Sub).Msg("Failed to read user")
+		return
 	}
 
-	// TODO fallback to lookup using email or username
+	switch len(lar.Accounts) {
+	case 0:
+		err = fmt.Errorf("account not found for %s", query)
+		g.logger.Error().Err(err).Msg("Failed to read account")
+	case 1:
+		a = lar.Accounts[0]
+	default:
+		err = fmt.Errorf("more than one acount accounts for %s: %+v, %+v", query, lar.Accounts[0], lar.Accounts[1])
+		g.logger.Error().Err(err).Msg("Failed to read account")
+	}
+
 	return
 }
 
 // GetMe implements the Service interface.
 func (g Graph) GetMe(w http.ResponseWriter, r *http.Request) {
 
-	record, err := g.getUserRecord(r.Context())
+	a, err := g.getUserAccount(r.Context())
 	if err != nil {
 		errorcode.ItemNotFound.Render(w, r, http.StatusNotFound)
 		return
 	}
 
-	me := createUserModelFromRecord(record)
+	me := createUserModelFromAccount(a)
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, me)
@@ -85,10 +100,36 @@ func (g Graph) GetMe(w http.ResponseWriter, r *http.Request) {
 
 // GetUsers implements the Service interface.
 func (g Graph) GetUsers(w http.ResponseWriter, r *http.Request) {
+	var ps int64
+	top := r.URL.Query().Get("top")
+	if top == "" {
+		top = r.URL.Query().Get("$top")
+	}
+	if top != "" {
+		var err error
+		ps, err = strconv.ParseInt(top, 10, 32)
+		if err != nil {
+			g.logger.Info().Err(err).Msg("Failed to parse top")
+			errorcode.InvalidRequest.Render(w, r, http.StatusBadRequest)
+			return
+		}
+	}
 
-	records, err := g.as.Search(r.Context(), &accounts.Query{})
+	filter := r.URL.Query().Get("filter")
+	// fallback to $filter
+	if filter == "" {
+		filter = r.URL.Query().Get("$filter")
+	}
+	// TODO parse filter and translate names
+	la := &accounts.ListAccountsRequest{
+		Query:     filter,
+		PageSize:  int32(ps),
+		PageToken: r.URL.Query().Get("page_token"),
+	}
+
+	lar, err := g.as.ListAccounts(r.Context(), la)
 	if err != nil {
-		g.logger.Info().Err(err).Msg("Failed to list users")
+		g.logger.Info().Err(err).Msg("Failed to list accounts")
 		// TODO only return not found if query had a filter?
 		// TODO translate errors
 		errorcode.ItemNotFound.Render(w, r, http.StatusNotFound)
@@ -97,8 +138,8 @@ func (g Graph) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	var users []*msgraph.User
 
-	for _, record := range records.Records {
-		users = append(users, createUserModelFromRecord(record))
+	for _, a := range lar.Accounts {
+		users = append(users, createUserModelFromAccount(a))
 	}
 
 	render.Status(r, http.StatusOK)
@@ -107,8 +148,8 @@ func (g Graph) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // GetUser implements the Service interface.
 func (g Graph) GetUser(w http.ResponseWriter, r *http.Request) {
-	record := r.Context().Value(authmw.CtxUserRecordKey).(*accounts.Record)
+	a := r.Context().Value(authmw.CtxUserAccountKey).(*accounts.Account)
 
 	render.Status(r, http.StatusOK)
-	render.JSON(w, r, createUserModelFromRecord(record))
+	render.JSON(w, r, createUserModelFromAccount(a))
 }

@@ -11,7 +11,7 @@ require (
 	github.com/go-chi/chi v4.1.1+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/micro/cli/v2 v2.1.2
-	github.com/micro/go-micro/v2 v2.0.0
+	github.com/micro/go-micro/v2 v2.6.0
 	github.com/oklog/run v1.1.0
 	github.com/openzipkin/zipkin-go v0.2.2
 	github.com/owncloud/ocis-accounts v0.1.2-0.20200506190553-899d2e0269e8
@@ -23,6 +23,6 @@ require (
 )
 
 // remove after https://github.com/owncloud/ocis-accounts/pull/30 has been merged
-replace github.com/owncloud/ocis-accounts => github.com/butonic/ocis-accounts v0.0.0-20200507164306-687fb4b61acb
+replace github.com/owncloud/ocis-accounts => ../ocis-accounts
 
 replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
