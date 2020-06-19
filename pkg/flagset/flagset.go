@@ -160,7 +160,7 @@ func ServerWithConfig(cfg *config.Config) []cli.Flag {
 			Name:        "reva-gateway-addr",
 			Value:       "127.0.0.1:9142",
 			Usage:       "REVA Gateway Endpoint",
-			EnvVars:     []string{"REVA_GATEWAY_ADDR"},
+			EnvVars:     []string{"GRAPH_REVA_GATEWAY_ADDR"},
 			Destination: &cfg.Reva.Address,
 		},
 	}

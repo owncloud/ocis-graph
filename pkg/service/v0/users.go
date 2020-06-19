@@ -59,7 +59,7 @@ func (g Graph) getUserAccount(ctx context.Context) (a *accounts.Account, err err
 
 	// TODO read query from config. use string replace for {mail}, {iss}, {sub} or whatever claims
 	query := "mail eq '{mail}'"
-	query = strings.ReplaceAll(query, "{mail}", claims.Email)
+	query = strings.ReplaceAll(query, "{mail}", strings.ReplaceAll(claims.Email, "'", "''"))
 
 	// lookup using claims
 	var lar *accounts.ListAccountsResponse
