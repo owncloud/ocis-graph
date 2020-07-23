@@ -1,6 +1,10 @@
 package http
 
 import (
+	"github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2/client"
+	accounts "github.com/owncloud/ocis-accounts/pkg/proto/v0"
+	authmw "github.com/owncloud/ocis-graph/pkg/middleware"
 	svc "github.com/owncloud/ocis-graph/pkg/service/v0"
 	"github.com/owncloud/ocis-graph/pkg/version"
 	"github.com/owncloud/ocis-pkg/v2/middleware"
@@ -22,7 +26,13 @@ func Server(opts ...Option) (http.Service, error) {
 		http.Flags(options.Flags...),
 	)
 
+	as, err := getAccountsService()
+	if err != nil {
+		return service, err
+	}
+
 	handle := svc.NewService(
+		svc.AccountsService(as),
 		svc.Logger(options.Logger),
 		svc.Config(options.Config),
 		svc.Middleware(
@@ -38,11 +48,19 @@ func Server(opts ...Option) (http.Service, error) {
 			middleware.Logger(
 				options.Logger,
 			),
-			middleware.OpenIDConnect(
-				oidc.Endpoint(options.Config.OpenIDConnect.Endpoint),
-				oidc.Realm(options.Config.OpenIDConnect.Realm),
-				oidc.Insecure(options.Config.OpenIDConnect.Insecure),
-				oidc.Logger(options.Logger),
+			authmw.BasicAuth(
+				authmw.AuthMiddleware( // wrap with basic auth middleware for ldap bind like requests
+					middleware.OpenIDConnect(
+						oidc.Endpoint(options.Config.OpenIDConnect.Endpoint),
+						oidc.Realm(options.Config.OpenIDConnect.Realm),
+						oidc.Insecure(options.Config.OpenIDConnect.Insecure),
+						oidc.Logger(options.Logger),
+					),
+				),
+				authmw.AccountsService(as),
+				authmw.Logger(
+					options.Logger,
+				),
 			),
 		),
 	)
@@ -60,4 +78,20 @@ func Server(opts ...Option) (http.Service, error) {
 
 	service.Init()
 	return service, nil
+}
+
+// getAccountsService returns an ocis-accounts service
+func getAccountsService() (accounts.AccountsService, error) {
+	service := micro.NewService()
+
+	// parse command line flags
+	service.Init()
+
+	err := service.Client().Init(
+		client.ContentType("application/json"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return accounts.NewAccountsService("com.owncloud.api.accounts", service.Client()), nil
 }

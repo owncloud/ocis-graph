@@ -26,6 +26,7 @@ func NewService(opts ...Option) Service {
 		config: options.Config,
 		mux:    m,
 		logger: &options.Logger,
+		as:     options.AccountsService,
 	}
 
 	m.Route(options.Config.HTTP.Root, func(r chi.Router) {
@@ -40,13 +41,6 @@ func NewService(opts ...Option) Service {
 				r.Route("/{userID}", func(r chi.Router) {
 					r.Use(svc.UserCtx)
 					r.Get("/", svc.GetUser)
-				})
-			})
-			r.Route("/groups", func(r chi.Router) {
-				r.Get("/", svc.GetGroups)
-				r.Route("/{groupID}", func(r chi.Router) {
-					r.Use(svc.GroupCtx)
-					r.Get("/", svc.GetGroup)
 				})
 			})
 		})
